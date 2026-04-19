@@ -1,0 +1,65 @@
+// SimAPI — BYOD SMS Gateway
+// https://www.prisma.io/docs/concepts/components/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// End-user account. Password uses Argon2. API key and webhook secret are never stored in plaintext.
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  /// Argon2 hash of the raw API key (shown once on generate). Null until user generates a key.
+  apiKeyHash    String?   @map("api_key_hash")
+  /// First segment of the key for indexed lookup (e.g. `sim_live_` + first 8 bytes hex). Unique per user.
+  apiKeyPrefix  String?   @unique @map("api_key_prefix")
+  webhookUrl    String?   @map("webhook_url")
+  /// Used to sign outbound webhooks (HMAC-SHA256). Stored server-side like Stripe’s signing secret.
+  webhookSecret String    @map("webhook_secret")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  devices  Device[]
+  messages Message[]
+
+  @@map("users")
+}
+
+model Device {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  deviceName     String    @map("device_name")
+  socketId       String?   @map("socket_id")
+  isOnline       Boolean   @default(false) @map("is_online")
+  lastHeartbeat  DateTime? @map("last_heartbeat")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("devices")
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  userId    String        @map("user_id")
+  toNumber  String        @map("to_number")
+  content   String
+  status    MessageStatus @default(PENDING)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("messages")
+}

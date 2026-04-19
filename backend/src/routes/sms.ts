@@ -1,0 +1,151 @@
+import { Router } from "express";
+import { z } from "zod";
+import { MessageStatus } from "@prisma/client";
+import { prisma } from "../lib/prisma.js";
+import type { AuthedRequest } from "../middleware/requireJwt.js";
+import { requireJwt } from "../middleware/requireJwt.js";
+import { sendSignedWebhook } from "../services/webhookService.js";
+import { runExclusiveSms } from "../services/smsSendGate.js";
+import { resolveSpintaxContent } from "../services/spintax.js";
+import { getIo } from "../socket/registerSocket.js";
+
+const router = Router();
+
+const sendSmsSchema = z.object({
+  to_number: z.string().min(5).max(32),
+  /** Leave headroom for optional duplicate-body spintax footer (≤1600 chars total on wire). */
+  content: z.string().min(1).max(1560),
+});
+
+type SendOutcome =
+  | { kind: "sent"; id: string; to_number: string }
+  | {
+      kind: "failed";
+      id: string;
+      to_number: string;
+      error: string;
+      webhook_dispatched: boolean;
+    }
+  | { kind: "no_user" };
+
+/**
+ * POST /api/v1/send-sms
+ * Requires JWT. Phase 2: serialized per user, ≥3s between attempts, spintax on duplicate bodies.
+ */
+router.post("/send-sms", requireJwt, async (req, res) => {
+  const parsed = sendSmsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const { userId } = req as AuthedRequest;
+  const { to_number, content } = parsed.data;
+
+  try {
+    const outcome = await runExclusiveSms(userId, async (): Promise<SendOutcome> => {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          devices: {
+            where: { isOnline: true, socketId: { not: null } },
+            orderBy: { lastHeartbeat: "desc" },
+            take: 1,
+          },
+        },
+      });
+
+      if (!user) {
+        return { kind: "no_user" };
+      }
+
+      const outboundContent = await resolveSpintaxContent({
+        userId,
+        toNumber: to_number,
+        content,
+      });
+
+      const message = await prisma.message.create({
+        data: {
+          userId,
+          toNumber: to_number,
+          content: outboundContent,
+          status: MessageStatus.PENDING,
+        },
+      });
+
+      const device = user.devices[0];
+      const io = getIo();
+
+      if (device?.socketId && io) {
+        io.to(device.socketId).emit("send_message", {
+          message_id: message.id,
+          to_number,
+          content: outboundContent,
+        });
+
+        await prisma.message.update({
+          where: { id: message.id },
+          data: { status: MessageStatus.SENT },
+        });
+
+        return { kind: "sent", id: message.id, to_number };
+      }
+
+      const failed = await prisma.message.update({
+        where: { id: message.id },
+        data: { status: MessageStatus.FAILED },
+      });
+
+      const reason = "No online device with an active connection";
+
+      if (user.webhookUrl && user.webhookSecret) {
+        const webhookResult = await sendSignedWebhook({
+          webhookUrl: user.webhookUrl,
+          webhookSecret: user.webhookSecret,
+          message: failed,
+          reason,
+        });
+        if (!webhookResult.ok) {
+          console.error("[send-sms] Webhook delivery failed", webhookResult);
+        }
+      }
+
+      return {
+        kind: "failed",
+        id: failed.id,
+        to_number,
+        error: reason,
+        webhook_dispatched: Boolean(user.webhookUrl),
+      };
+    });
+
+    if (outcome.kind === "no_user") {
+      res.status(404).json({ error: "User not found", to_number });
+      return;
+    }
+
+    if (outcome.kind === "sent") {
+      res.status(202).json({
+        id: outcome.id,
+        to_number: outcome.to_number,
+        status: "sent",
+        message: "Dispatched to connected device",
+      });
+      return;
+    }
+
+    res.status(503).json({
+      id: outcome.id,
+      to_number: outcome.to_number,
+      status: "failed",
+      error: outcome.error,
+      webhook_dispatched: outcome.webhook_dispatched,
+    });
+  } catch (err) {
+    console.error("[send-sms]", err);
+    res.status(500).json({ error: "Failed to process SMS request" });
+  }
+});
+
+export { router as smsRouter };
