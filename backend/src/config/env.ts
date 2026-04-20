@@ -22,4 +22,10 @@ export const env = {
   frontendUrl: process.env.FRONTEND_URL as string,
   /** JWT access token lifetime — production requirement: 24 hours. */
   jwtExpiresIn: "24h" as const,
+  /** GitHub OAuth credentials */
+  githubClientId: process.env.GITHUB_CLIENT_ID ?? "",
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+  /** Google OAuth credentials */
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
 };

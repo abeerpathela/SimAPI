@@ -1,6 +1,7 @@
 import http from "node:http";
 import express from "express";
 import cors from "cors";
+import passport from "passport";
 import { env } from "./config/env.js";
 import { authRouter } from "./routes/auth.js";
 import { smsRouter } from "./routes/sms.js";
@@ -15,6 +16,9 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "256kb" }));
+// Initialize passport — stateless mode, no session required
+app.use(passport.initialize());
+
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "simapi-backend" });

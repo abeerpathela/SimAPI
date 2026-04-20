@@ -2,8 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { MessageStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-import type { AuthedRequest } from "../middleware/requireJwt.js";
-import { requireJwt } from "../middleware/requireJwt.js";
+import type { AuthedApiKeyRequest } from "../middleware/requireApiKey.js";
+import { requireApiKey } from "../middleware/requireApiKey.js";
 import { sendSignedWebhook } from "../services/webhookService.js";
 import { runExclusiveSms } from "../services/smsSendGate.js";
 import { resolveSpintaxContent } from "../services/spintax.js";
@@ -30,16 +30,16 @@ type SendOutcome =
 
 /**
  * POST /api/v1/send-sms
- * Requires JWT. Phase 2: serialized per user, ≥3s between attempts, spintax on duplicate bodies.
+ * Requires API key (Bearer token). Serialized per user, ≥3s between attempts, spintax on duplicate bodies.
  */
-router.post("/send-sms", requireJwt, async (req, res) => {
+router.post("/send-sms", requireApiKey, async (req, res) => {
   const parsed = sendSmsSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
     return;
   }
 
-  const { userId } = req as AuthedRequest;
+  const { userId } = req as AuthedApiKeyRequest;
   const { to_number, content } = parsed.data;
 
   try {

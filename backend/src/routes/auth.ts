@@ -1,13 +1,18 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import argon2 from "argon2";
 import { z } from "zod";
+import passport from "passport";
 import { prisma } from "../lib/prisma.js";
 import { signAccessToken } from "../utils/jwt.js";
 import { generateWebhookSecret } from "../utils/tokens.js";
 import { requireJwt, type AuthedRequest } from "../middleware/requireJwt.js";
 import { saveNewApiKeyForUser } from "../services/apiKeyService.js";
+import { env } from "../config/env.js";
+// Side-effect import: registers Google + GitHub strategies on the passport singleton
+import "../config/passport.js";
 
 const router = Router();
+
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -83,6 +88,14 @@ router.post("/login", async (req, res) => {
       return;
     }
 
+    // OAuth-only accounts have no password — direct them to the correct provider
+    if (!user.passwordHash) {
+      res.status(401).json({
+        error: `This account uses ${user.authProvider} sign-in. Please continue with ${user.authProvider}.`,
+      });
+      return;
+    }
+
     const valid = await argon2.verify(user.passwordHash, password);
     if (!valid) {
       res.status(401).json({ error: "Invalid email or password" });
@@ -150,4 +163,130 @@ router.patch("/webhook-url", requireJwt, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/messages
+ * Requires JWT. Fetches all messages for the authenticated user.
+ */
+router.get("/messages", requireJwt, async (req, res) => {
+  const { userId } = req as AuthedRequest;
+
+  try {
+    const messages = await prisma.message.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    res.json({ messages });
+  } catch (err) {
+    console.error("[messages]", err);
+    res.status(500).json({ error: "Could not fetch messages" });
+  }
+});
+
+/**
+ * GET /api/devices
+ * Requires JWT. Fetches all devices for the authenticated user.
+ */
+router.get("/devices", requireJwt, async (req, res) => {
+  const { userId } = req as AuthedRequest;
+
+  try {
+    const devices = await prisma.device.findMany({
+      where: { userId },
+      orderBy: { lastHeartbeat: "desc" },
+    });
+    res.json({ devices });
+  } catch (err) {
+    console.error("[devices]", err);
+    res.status(500).json({ error: "Could not fetch devices" });
+  }
+});
+
+/**
+ * GET /api/me
+ * Requires JWT. Fetches the authenticated user's data.
+ */
+router.get("/me", requireJwt, async (req, res) => {
+  const { userId } = req as AuthedRequest;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        apiKeyPrefix: true,
+        webhookUrl: true,
+        createdAt: true,
+      },
+    });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json({ user });
+  } catch (err) {
+    console.error("[me]", err);
+    res.status(500).json({ error: "Could not fetch user data" });
+  }
+});
+
+
+// ---------------------------------------------------------------------------
+// OAuth Routes — Google
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/auth/google
+ * Redirects the browser to Google's consent screen.
+ */
+router.get(
+  "/auth/google",
+  passport.authenticate("google", { session: false, scope: ["profile", "email"] }),
+);
+
+/**
+ * GET /api/auth/google/callback
+ * Google redirects here after the user grants permission.
+ * Issues a JWT and redirects to the frontend dashboard with ?token=...
+ */
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: `${env.frontendUrl}/auth?error=oauth_failed` }),
+  (req: Request, res: Response) => {
+    const user = req.user as { id: string; email: string };
+    const token = signAccessToken(user.id, user.email);
+    // Pass token via query param — React reads it once and stores in localStorage
+    res.redirect(`${env.frontendUrl}/dashboard?token=${token}`);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// OAuth Routes — GitHub
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/auth/github
+ * Redirects the browser to GitHub's consent screen.
+ */
+router.get(
+  "/auth/github",
+  passport.authenticate("github", { session: false, scope: ["user:email"] }),
+);
+
+/**
+ * GET /api/auth/github/callback
+ * GitHub redirects here after the user grants permission.
+ */
+router.get(
+  "/auth/github/callback",
+  passport.authenticate("github", { session: false, failureRedirect: `${env.frontendUrl}/auth?error=oauth_failed` }),
+  (req: Request, res: Response) => {
+    const user = req.user as { id: string; email: string };
+    const token = signAccessToken(user.id, user.email);
+    res.redirect(`${env.frontendUrl}/dashboard?token=${token}`);
+  },
+);
+
 export { router as authRouter };
+

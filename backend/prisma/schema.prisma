@@ -10,11 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// End-user account. Password uses Argon2. API key and webhook secret are never stored in plaintext.
+/// End-user account. Password uses Argon2 for local auth. OAuth users have no password.
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  passwordHash  String    @map("password_hash")
+  /// Null for OAuth-only users (Google / GitHub). Required for local email+password accounts.
+  passwordHash  String?   @map("password_hash")
+  /// "local" | "google" | "github"
+  authProvider  String    @default("local") @map("auth_provider")
+  /// The unique ID returned by the OAuth provider (e.g. Google sub, GitHub id). Null for local accounts.
+  providerId    String?   @map("provider_id")
   /// Argon2 hash of the raw API key (shown once on generate). Null until user generates a key.
   apiKeyHash    String?   @map("api_key_hash")
   /// First segment of the key for indexed lookup (e.g. `sim_live_` + first 8 bytes hex). Unique per user.
@@ -27,6 +32,8 @@ model User {
   devices  Device[]
   messages Message[]
 
+  /// A user can only have one account per provider.
+  @@unique([authProvider, providerId], name: "provider_account")
   @@map("users")
 }
 
