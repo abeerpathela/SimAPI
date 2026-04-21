@@ -17,18 +17,7 @@ export function getIo(): Server | null {
 export function registerSocketServer(httpServer: HttpServer): Server {
   const io = new Server(httpServer, {
     cors: {
-      // Browsers send Origin; React Native / native HTTP stacks often omit it — allow those through.
-      origin: (origin, callback) => {
-        if (origin === undefined) {
-          callback(null, true);
-          return;
-        }
-        if (origin === env.frontendUrl) {
-          callback(null, true);
-          return;
-        }
-        callback(new Error("CORS: origin not allowed"));
-      },
+      origin: "*",
       methods: ["GET", "POST"],
     },
     transports: ["websocket", "polling"],
@@ -44,10 +33,12 @@ export function registerSocketServer(httpServer: HttpServer): Server {
             : null;
 
       if (!rawKey || rawKey.length < 20) {
+        console.log("❌ Missing or invalid API key length:", rawKey?.length);
         next(new Error("Missing or invalid API key"));
         return;
       }
 
+      console.log("🔑 Incoming API Key:", rawKey);
       const user = await findUserByApiKey(rawKey);
       if (!user) {
         next(new Error("Invalid API key"));
@@ -63,23 +54,84 @@ export function registerSocketServer(httpServer: HttpServer): Server {
     }
   });
 
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async (socket: Socket) => {
+    console.log("🔥 Client connected:", socket.id);
+
     const userId = socket.data.userId as string;
-    const deviceNameRaw = socket.handshake.auth?.deviceName ?? socket.handshake.auth?.device_name;
+    const deviceNameRaw =
+      socket.handshake.auth?.deviceName ??
+      socket.handshake.auth?.device_name ??
+      socket.handshake.query?.deviceName ??
+      socket.handshake.query?.device_name;
+
     const deviceName =
       typeof deviceNameRaw === "string" && deviceNameRaw.trim().length > 0
         ? deviceNameRaw.trim().slice(0, 120)
         : "Android device";
 
-    void attachDeviceSession(socket, userId, deviceName);
+    // ✅ REGISTER/UPSERT DEVICE
+    try {
+      console.log("📱 Attempting to register device:", deviceName, "for user:", userId);
+      
+      const existing = await prisma.device.findFirst({
+        where: { userId, deviceName },
+      });
+
+      let device;
+      if (existing) {
+        device = await prisma.device.update({
+          where: { id: existing.id },
+          data: {
+            socketId: socket.id,
+            isOnline: true,
+            lastHeartbeat: new Date(),
+          },
+        });
+        console.log("📱 Existing device updated:", device.id);
+      } else {
+        device = await prisma.device.create({
+          data: {
+            userId,
+            deviceName,
+            socketId: socket.id,
+            isOnline: true,
+            lastHeartbeat: new Date(),
+          },
+        });
+        console.log("📱 New device created:", device.id);
+      }
+      
+      // Emit connection confirmation with device info
+      socket.emit("connected", {
+        status: "ok",
+        socketId: socket.id,
+        deviceId: device.id,
+      });
+    } catch (err: any) {
+      console.error("❌ Device registration failed:", err.message);
+      
+      // Still notify success even if DB update fails (so app knows it's at least connected to socket)
+      socket.emit("connected", {
+        status: "ok",
+        socketId: socket.id,
+        error: "DB_SYNC_FAILED"
+      });
+    }
 
     socket.on("heartbeat", () => {
       void touchHeartbeat(socket.id);
     });
 
-    socket.on("disconnect", (reason) => {
-      console.info(`[socket] disconnect ${socket.id} (${reason})`);
-      void markDeviceOffline(socket.id);
+    socket.on("disconnect", async (reason) => {
+      console.log("❌ Client disconnected:", socket.id, `(${reason})`);
+      try {
+        await prisma.device.updateMany({
+          where: { socketId: socket.id },
+          data: { isOnline: false, socketId: null },
+        });
+      } catch (err) {
+        console.error("❌ Failed to mark device offline:", err);
+      }
     });
   });
 
