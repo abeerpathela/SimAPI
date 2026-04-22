@@ -16,6 +16,7 @@ passport.use(
       clientSecret: env.googleClientSecret,
       callbackURL: env.googleCallbackUrl,
       scope: ["profile", "email"],
+      proxy: true,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
@@ -68,6 +69,7 @@ passport.use(
       clientSecret: env.githubClientSecret,
       callbackURL: env.githubCallbackUrl,
       scope: ["user:email"],
+      proxy: true,
     },
     async (_accessToken: string, _refreshToken: string, profile: any, done: (err: Error | null, user?: any) => void) => {
       try {
