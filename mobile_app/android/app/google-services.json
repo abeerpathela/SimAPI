@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "852904579522",
+    "project_id": "simapi-9fe23",
+    "storage_bucket": "simapi-9fe23.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:852904579522:android:86302f6fd11ace1ff3c65b",
+        "android_client_info": {
+          "package_name": "com.simapi.mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgJZKlG1mHqIxV9qlH_CbTkYXQPPPGk9Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
