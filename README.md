@@ -1,5 +1,4 @@
 # 🚀 SimAPI — Zero Fee SMS API (BYOD Gateway)
-<!-- test comment -->
 
 ![status](https://img.shields.io/badge/status-live-success)
 ![stack](https://img.shields.io/badge/stack-full--stack-blue)
