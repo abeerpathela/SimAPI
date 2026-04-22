@@ -6,11 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export function Navbar() {
   const { user, logout } = useAuth()
 
-  const handleDownloadApp = () => {
-    // TODO: Replace with real app download URL when available
-    // Example: window.open('https://play.google.com/store/apps/details?id=com.simapi.app', '_blank')
-    alert('SimAPI Android App Coming Soon! This is a placeholder - replace with real download URL when app is ready.')
-  }
+  const APK_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1xJxiVHCUIWdCZItZMDWF0ypxJhlHf2iG"
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,10 +36,16 @@ export function Navbar() {
               <Link to="/auth">
                 <Button variant="ghost">Login</Button>
               </Link>
-              <Button onClick={handleDownloadApp}>
-                <Smartphone className="mr-2 h-4 w-4" />
-                Download App
-              </Button>
+              <a 
+                href={APK_DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button>
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  Download App
+                </Button>
+              </a>
               <Link to="/auth">
                 <Button>Get Started</Button>
               </Link>

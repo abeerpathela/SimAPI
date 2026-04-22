@@ -7,12 +7,7 @@ import { API_URL } from '@/config'
 
 export function LandingPage() {
   const { user } = useAuth()
-
-  const handleDownloadApp = () => {
-    // TODO: Replace with real app download URL when available
-    // Example: window.open('https://play.google.com/store/apps/details?id=com.simapi.app', '_blank')
-    alert('SimAPI Android App Coming Soon! This is a placeholder - replace with real download URL when app is ready.')
-  }
+  const APK_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=1xJxiVHCUIWdCZItZMDWF0ypxJhlHf2iG"
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -35,9 +30,11 @@ export function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {user ? (
                 <>
-                  <Button onClick={handleDownloadApp} size="lg">
-                    Download Android App
-                  </Button>
+                  <a href={APK_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                    <Button size="lg">
+                      Download Android App
+                    </Button>
+                  </a>
                   <Link to="/dashboard">
                     <Button variant="outline" size="lg">
                       Go to Dashboard
@@ -47,9 +44,11 @@ export function LandingPage() {
                 </>
               ) : (
                 <>
-                  <Button onClick={handleDownloadApp} size="lg">
-                    Download Android App
-                  </Button>
+                  <a href={APK_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                    <Button size="lg">
+                      Download Android App
+                    </Button>
+                  </a>
                   <Link to="/auth">
                     <Button size="lg">
                       Get Started Free
@@ -207,9 +206,11 @@ console.log('Message sent:', result.id);`}</code>
             </p>
             {user ? (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button onClick={handleDownloadApp} size="lg">
-                  Download App
-                </Button>
+                <a href={APK_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                  <Button size="lg">
+                    Download App
+                  </Button>
+                </a>
                 <Link to="/dashboard">
                   <Button variant="outline" size="lg">
                     Open Your Dashboard
@@ -218,9 +219,11 @@ console.log('Message sent:', result.id);`}</code>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button onClick={handleDownloadApp} size="lg">
-                  Download App
-                </Button>
+                <a href={APK_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                  <Button size="lg">
+                    Download App
+                  </Button>
+                </a>
                 <Link to="/auth">
                   <Button size="lg">
                     Start Building Now — It's Free
