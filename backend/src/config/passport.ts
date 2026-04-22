@@ -14,7 +14,7 @@ passport.use(
     {
       clientID: env.googleClientId,
       clientSecret: env.googleClientSecret,
-      callbackURL: `${env.backendUrl}/api/auth/google/callback`,
+      callbackURL: env.googleCallbackUrl,
       scope: ["profile", "email"],
     },
     async (_accessToken, _refreshToken, profile, done) => {
@@ -66,7 +66,7 @@ passport.use(
     {
       clientID: env.githubClientId,
       clientSecret: env.githubClientSecret,
-      callbackURL: `${env.backendUrl}/api/auth/github/callback`,
+      callbackURL: env.githubCallbackUrl,
       scope: ["user:email"],
     },
     async (_accessToken: string, _refreshToken: string, profile: any, done: (err: Error | null, user?: any) => void) => {

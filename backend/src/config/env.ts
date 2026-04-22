@@ -5,7 +5,16 @@ dotenv.config();
 /**
  * Centralized environment validation so the server fails fast with a clear message.
  */
-const required = ["DATABASE_URL", "JWT_SECRET", "FRONTEND_URL", "BACKEND_URL"] as const;
+const required = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "FRONTEND_URL",
+  "BACKEND_URL",
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+] as const;
 
 for (const key of required) {
   if (!process.env[key] || String(process.env[key]).trim() === "") {
@@ -25,9 +34,11 @@ export const env = {
   /** JWT access token lifetime — production requirement: 24 hours. */
   jwtExpiresIn: "24h" as const,
   /** GitHub OAuth credentials */
-  githubClientId: process.env.GITHUB_CLIENT_ID ?? "",
-  githubClientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+  githubClientId: process.env.GITHUB_CLIENT_ID as string,
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+  githubCallbackUrl: process.env.GITHUB_CALLBACK_URL || `${process.env.BACKEND_URL}/api/auth/github/callback`,
   /** Google OAuth credentials */
-  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  googleClientId: process.env.GOOGLE_CLIENT_ID as string,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+  googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL || `${process.env.BACKEND_URL}/api/auth/google/callback`,
 };
