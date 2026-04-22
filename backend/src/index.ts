@@ -50,7 +50,8 @@ const httpServer = http.createServer(app);
 registerSocketServer(httpServer);
 
 // ✅ Start server
-httpServer.listen(env.port, "0.0.0.0", () => {
-  console.log(`SimAPI backend listening on 0.0.0.0:${env.port}`);
-  console.log(`CORS allowed origin: ${env.frontendUrl || "*"}`);
+const PORT = process.env.PORT || env.port || 3000;
+
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`SimAPI backend listening on ${PORT}`);
 });
