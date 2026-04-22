@@ -12,8 +12,6 @@ const required = [
   "BACKEND_URL",
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
 ] as const;
 
 for (const key of required) {
@@ -41,12 +39,6 @@ export const env = {
   githubCallbackUrl: (process.env.GITHUB_CALLBACK_URL && !process.env.GITHUB_CALLBACK_URL.includes("localhost")) 
     ? process.env.GITHUB_CALLBACK_URL 
     : `${rawBackendUrl}/api/auth/github/callback`,
-  /** Google OAuth credentials */
-  googleClientId: process.env.GOOGLE_CLIENT_ID as string,
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-  googleCallbackUrl: (process.env.GOOGLE_CALLBACK_URL && !process.env.GOOGLE_CALLBACK_URL.includes("localhost"))
-    ? process.env.GOOGLE_CALLBACK_URL
-    : `${rawBackendUrl}/api/auth/google/callback`,
 };
 
 // Log OAuth config for debugging (mask secrets)
@@ -54,5 +46,4 @@ if (process.env.NODE_ENV !== "test") {
   console.log("[config] Frontend URL:", env.frontendUrl);
   console.log("[config] Backend URL: ", env.backendUrl);
   console.log("[config] GitHub Callback:", env.githubCallbackUrl);
-  console.log("[config] Google Callback:", env.googleCallbackUrl);
 }

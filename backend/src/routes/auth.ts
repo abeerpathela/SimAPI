@@ -8,7 +8,7 @@ import { generateWebhookSecret } from "../utils/tokens.js";
 import { requireJwt, type AuthedRequest } from "../middleware/requireJwt.js";
 import { saveNewApiKeyForUser } from "../services/apiKeyService.js";
 import { env } from "../config/env.js";
-// Side-effect import: registers Google + GitHub strategies on the passport singleton
+// Side-effect import: registers GitHub strategy on the passport singleton
 import "../config/passport.js";
 
 const router = Router();
@@ -231,35 +231,6 @@ router.get("/me", requireJwt, async (req, res) => {
   }
 });
 
-
-// ---------------------------------------------------------------------------
-// OAuth Routes — Google
-// ---------------------------------------------------------------------------
-
-/**
- * GET /api/auth/google
- * Redirects the browser to Google's consent screen.
- */
-router.get(
-  "/auth/google",
-  passport.authenticate("google", { session: false, scope: ["profile", "email"] }),
-);
-
-/**
- * GET /api/auth/google/callback
- * Google redirects here after the user grants permission.
- * Issues a JWT and redirects to the frontend dashboard with ?token=...
- */
-router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: `${env.frontendUrl}/auth?error=oauth_failed` }),
-  (req: Request, res: Response) => {
-    const user = req.user as { id: string; email: string };
-    const token = signAccessToken(user.id, user.email);
-    // Pass token via query param — React reads it once and stores in localStorage
-    res.redirect(`${env.frontendUrl}/dashboard?token=${token}`);
-  },
-);
 
 // ---------------------------------------------------------------------------
 // OAuth Routes — GitHub

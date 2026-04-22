@@ -1,62 +1,8 @@
 import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { prisma } from "../lib/prisma.js";
 import { generateWebhookSecret } from "../utils/tokens.js";
 import { env } from "./env.js";
-
-/**
- * Google OAuth 2.0 Strategy
- * Scope: profile + email — we only store the email and provider ID, nothing else.
- */
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: env.googleClientId,
-      clientSecret: env.googleClientSecret,
-      callbackURL: env.googleCallbackUrl,
-      scope: ["profile", "email"],
-      proxy: true,
-    },
-    async (_accessToken, _refreshToken, profile, done) => {
-      try {
-        const email =
-          profile.emails?.[0]?.value ??
-          `${profile.id}@google-noemail.simapi.dev`;
-
-        // Try to find by provider first (most reliable — email can change)
-        let user = await prisma.user.findFirst({
-          where: { authProvider: "google", providerId: profile.id },
-        });
-
-        if (!user) {
-          // Fallback: existing local account with the same email → link it to Google
-          const existing = await prisma.user.findUnique({ where: { email } });
-          if (existing) {
-            user = await prisma.user.update({
-              where: { id: existing.id },
-              data: { authProvider: "google", providerId: profile.id },
-            });
-          } else {
-            // Brand-new OAuth user — create account, no password required
-            user = await prisma.user.create({
-              data: {
-                email,
-                authProvider: "google",
-                providerId: profile.id,
-                webhookSecret: generateWebhookSecret(),
-              },
-            });
-          }
-        }
-
-        return done(null, user);
-      } catch (err) {
-        return done(err as Error);
-      }
-    },
-  ),
-);
 
 /**
  * GitHub OAuth 2.0 Strategy (passport-github2)

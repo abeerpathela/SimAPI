@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Globe as GoogleIcon, GitBranch as GithubIcon } from 'lucide-react'
+import { GitBranch as GithubIcon } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 import { API_URL } from '@/config'
@@ -22,7 +22,7 @@ export function AuthPage() {
   })
   const [formError, setFormError] = useState('')
 
-  const handleOAuthLogin = (provider: 'google' | 'github') => {
+  const handleOAuthLogin = (provider: 'github') => {
     window.location.href = `${API_URL}/api/auth/${provider}`
   }
 
@@ -81,15 +81,6 @@ export function AuthPage() {
           <CardContent className="space-y-4">
             {/* OAuth Buttons */}
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => handleOAuthLogin('google')}
-                disabled={isLoading}
-              >
-                <GoogleIcon className="mr-2 h-4 w-4" />
-                Continue with Google
-              </Button>
               <Button
                 variant="outline"
                 className="w-full"
