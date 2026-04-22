@@ -9,7 +9,7 @@ import { Copy, Key, Smartphone, Settings, MessageSquare } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { io, type Socket } from 'socket.io-client'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+import { API_URL } from '@/config'
 
 interface Message {
   id: string

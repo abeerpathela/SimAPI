@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { Globe as GoogleIcon, GitBranch as GithubIcon } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+import { API_URL } from '@/config'
 
 export function AuthPage() {
   const [searchParams] = useSearchParams()

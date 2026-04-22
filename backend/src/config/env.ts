@@ -5,7 +5,7 @@ dotenv.config();
 /**
  * Centralized environment validation so the server fails fast with a clear message.
  */
-const required = ["DATABASE_URL", "JWT_SECRET", "FRONTEND_URL"] as const;
+const required = ["DATABASE_URL", "JWT_SECRET", "FRONTEND_URL", "BACKEND_URL"] as const;
 
 for (const key of required) {
   if (!process.env[key] || String(process.env[key]).trim() === "") {
@@ -20,6 +20,8 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET as string,
   /** Single allowed browser origin for the React dashboard (Vite dev: http://localhost:5173). */
   frontendUrl: process.env.FRONTEND_URL as string,
+  /** The public URL of the backend (for OAuth callbacks). */
+  backendUrl: process.env.BACKEND_URL as string,
   /** JWT access token lifetime — production requirement: 24 hours. */
   jwtExpiresIn: "24h" as const,
   /** GitHub OAuth credentials */

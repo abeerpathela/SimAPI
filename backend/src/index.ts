@@ -9,10 +9,10 @@ import { registerSocketServer } from "./socket/registerSocket.js";
 
 const app = express();
 
-// ✅ CORS (important for ngrok + mobile)
+// ✅ CORS (Restricted to frontend URL in production)
 app.use(
   cors({
-    origin: "*",
+    origin: env.frontendUrl || "*",
     methods: ["GET", "POST"],
     credentials: true,
   }),
@@ -52,5 +52,5 @@ registerSocketServer(httpServer);
 // ✅ Start server
 httpServer.listen(env.port, "0.0.0.0", () => {
   console.log(`SimAPI backend listening on 0.0.0.0:${env.port}`);
-  console.log(`CORS allowed origin: *`);
+  console.log(`CORS allowed origin: ${env.frontendUrl || "*"}`);
 });

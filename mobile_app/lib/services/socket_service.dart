@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import '../config/api_constants.dart';
 
 class SocketService {
-  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:4000';
+  static String get baseUrl => ApiConstants.baseUrl;
   
   io.Socket? _socket;
   final StreamController<Map<String, dynamic>> _messageController = StreamController.broadcast();
@@ -21,7 +21,7 @@ class SocketService {
       'transports': ['websocket'],
       'autoConnect': true,
       'secure': true,
-      'path': '/socket.io/',
+      'path': ApiConstants.socketPath,
       'query': {
         'apiKey': apiKey,
         'deviceName': deviceName,
