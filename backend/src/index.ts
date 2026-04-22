@@ -50,7 +50,7 @@ const httpServer = http.createServer(app);
 registerSocketServer(httpServer);
 
 // ✅ Start server
-const PORT = process.env.PORT || env.port || 3000;
+const PORT = Number(process.env.PORT) || env.port || 3000;
 
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`SimAPI backend listening on ${PORT}`);
