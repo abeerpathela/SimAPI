@@ -17,10 +17,9 @@
 
 * 🔗 **Frontend:** https://sim-api-one.vercel.app
 * 🔗 **Backend API:** https://simapi-tzyo.onrender.com
+* 🔗 **APP:** https://bit.ly/4tuEOUv
 
-👉 **Click the image below to open the app**
 
-[![SimAPI App](https://github.com/user-attachments/assets/97598d99-2b38-450a-8117-8ea29fddd834)](https://bit.ly/4tuEOUv)
 
 ---
 
