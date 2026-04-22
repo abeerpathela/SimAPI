@@ -11,12 +11,16 @@
 
 ## 🌐 Live Demo
 
-👉 **Click the image below to open the app**
+👉 **Click the image below to open the website**
 
-[![SimAPI Dashboard](https://github.com/user-attachments/assets/d29ce420-1c7a-4625-b1f5-611a79c4b889)](https://sim-api-one.vercel.app)
+[![SimAPI Web](https://github.com/user-attachments/assets/d29ce420-1c7a-4625-b1f5-611a79c4b889)](https://sim-api-one.vercel.app)
 
 * 🔗 **Frontend:** https://sim-api-one.vercel.app
 * 🔗 **Backend API:** https://simapi-tzyo.onrender.com
+
+👉 **Click the image below to open the app**
+
+[![SimAPI App](https://github.com/user-attachments/assets/97598d99-2b38-450a-8117-8ea29fddd834)](https://bit.ly/4tuEOUv)
 
 ---
 
