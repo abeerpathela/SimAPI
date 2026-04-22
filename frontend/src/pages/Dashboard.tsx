@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Copy, Key, Smartphone, Settings, MessageSquare } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { io, type Socket } from 'socket.io-client'
 
 import { API_URL } from '@/config'
 
@@ -35,7 +34,6 @@ export function Dashboard() {
   const [webhookUrl, setWebhookUrl] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
     const urlToken = searchParams.get('token')
