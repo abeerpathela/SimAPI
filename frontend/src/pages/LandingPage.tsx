@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { ArrowRight, Code, Zap, Shield, DollarSign, Terminal } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
+import { API_URL } from '@/config'
+
 export function LandingPage() {
   const { user } = useAuth()
 
@@ -175,7 +177,7 @@ export function LandingPage() {
                 <span className="text-slate-300 font-medium">Send SMS in JavaScript</span>
               </div>
               <pre className="text-sm text-slate-100">
-                <code>{`const response = await fetch('https://api.simapi.dev/api/v1/send-sms', {
+                <code>{`const response = await fetch('${API_URL}/api/v1/send-sms', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
