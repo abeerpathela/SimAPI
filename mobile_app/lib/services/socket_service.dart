@@ -56,22 +56,27 @@ class SocketService {
     });
 
     _socket!.on('send_message', (data) {
-      print('📨 Received message to send: $data');
+      print('📨 [Socket] Received message job: $data');
       _messageController.add(Map<String, dynamic>.from(data));
     });
   }
 
   void sendHeartbeat() {
     if (_socket != null && _socket!.connected) {
+      print('💓 [Socket] Sending heartbeat...');
       _socket!.emit('heartbeat');
+    } else {
+      print('⚠️ [Socket] Heartbeat skipped: Not connected');
     }
   }
 
-  void sendStatusUpdate(String messageId, String status) {
+  void sendStatusUpdate(String messageId, String status, {String? error}) {
     if (_socket != null && _socket!.connected) {
+      print('📤 [Socket] Sending status update: $messageId -> $status ${error != null ? "($error)" : ""}');
       _socket!.emit('message_status', {
         'message_id': messageId,
         'status': status,
+        'error': error,
       });
     }
   }
