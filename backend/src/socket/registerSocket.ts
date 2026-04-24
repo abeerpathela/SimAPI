@@ -119,23 +119,7 @@ export function registerSocketServer(httpServer: HttpServer): Server {
     }
 
     socket.on("heartbeat", () => {
-      console.log(`💓 Heartbeat from ${socket.id} (User: ${socket.data.email})`);
       void touchHeartbeat(socket.id);
-    });
-
-    socket.on("message_status", async (data: { message_id: string; status: string; error?: string }) => {
-      console.log(`📊 Message Status Update: ${data.message_id} -> ${data.status} ${data.error ? `(Error: ${data.error})` : ""}`);
-      try {
-        await prisma.message.update({
-          where: { id: data.message_id },
-          data: { 
-            status: data.status.toUpperCase() as any,
-            // You might want to add an error field to your Message model in schema.prisma later
-          },
-        });
-      } catch (err) {
-        console.error("❌ Failed to update message status in DB:", err);
-      }
     });
 
     socket.on("disconnect", async (reason) => {

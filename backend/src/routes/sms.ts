@@ -148,42 +148,4 @@ router.post("/send-sms", requireApiKey, async (req, res) => {
   }
 });
 
-/**
- * GET /api/v1/debug/jobs
- * Requires API key. Shows pending/recent jobs for the device.
- */
-router.get("/debug/jobs", requireApiKey, async (req, res) => {
-  const { userId } = req as AuthedApiKeyRequest;
-
-  try {
-    const jobs = await prisma.message.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-
-    const devices = await prisma.device.findMany({
-      where: { userId },
-    });
-
-    res.json({
-      jobs: jobs.map(j => ({
-        id: j.id,
-        to: j.toNumber,
-        status: j.status,
-        created: j.createdAt,
-      })),
-      devices: devices.map(d => ({
-        name: d.deviceName,
-        online: d.isOnline,
-        lastSeen: d.lastHeartbeat,
-        socketId: d.socketId,
-      })),
-    });
-  } catch (err) {
-    console.error("[debug/jobs]", err);
-    res.status(500).json({ error: "Failed to fetch debug data" });
-  }
-});
-
 export { router as smsRouter };
