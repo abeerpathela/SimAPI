@@ -7,7 +7,7 @@
  */
 import { io } from "socket.io-client";
 
-const url = "https://simapi-tzyo.onrender.com";
+const url = "http://localhost:4000";
 const apiKey = "sim_live_ac45118c8e9b46714145bf9b62f85c453a45110afcd66354";
 
 console.log("[test-socket] Starting…");

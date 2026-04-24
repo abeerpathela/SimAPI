@@ -12,7 +12,7 @@ const app = express();
 // ✅ CORS (Restricted to frontend URL in production)
 app.use(
   cors({
-    origin: [env.frontendUrl, "http://localhost:5173", "https://sim-api-one.vercel.app"],
+    origin: env.frontendUrl || "*",
     methods: ["GET", "POST"],
     credentials: true,
   }),
@@ -21,7 +21,7 @@ app.use(
 app.use(express.json({ limit: "256kb" }));
 app.use(passport.initialize());
 
-// ✅ Health route
+// ✅ Health route (for testing ngrok)
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "simapi-backend" });
 });
